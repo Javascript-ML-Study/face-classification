@@ -21,8 +21,9 @@ class FaceDetectionElement extends HTMLElement {
     }
 
     template() {
-        return `<video class="input"></video>
-        <canvas class="output" width="1280px" height="720px"></canvas>`
+        return `<video class="input d-none"></video>
+        <canvas class="output" width="1280px" height="720px"></canvas>
+        <p></p>`
     }
 
 
@@ -33,13 +34,26 @@ class FaceDetectionElement extends HTMLElement {
         this.canvasCtx.drawImage(
             results.image, 0, 0, this.canvasElement.width, this.canvasElement.height);
         if (results.detections.length > 0) {
+            let detections = results.detections[0].boundingBox
+            let location = {
+                x: (detections.xCenter - (detections.width / 2)) * 1280,
+                y: (detections.yCenter - (detections.height / 2)) * 720,
+                w: detections.width * 1280,
+                h: detections.height * 720
+            }
+
+            this.querySelector("p").innerHTML = JSON.stringify(location)
+            let imageData = this.canvasCtx.getImageData(location.x, location.y, location.w, location.h);
+
+            this.canvasCtx.putImageData(imageData, 0, 0);
+
             this.drawingUtils.drawRectangle(
                 this.canvasCtx, results.detections[0].boundingBox,
                 {color: 'blue', lineWidth: 4, fillColor: '#00000000'});
-                this.drawingUtils.drawLandmarks(this.canvasCtx, results.detections[0].landmarks, {
-            color: 'red',
-            radius: 5,
-            });
+            // this.drawingUtils.drawLandmarks(this.canvasCtx, results.detections[0].landmarks, {
+            // color: 'red',
+            // radius: 5,
+            // });
         }
         this.canvasCtx.restore();
     }
