@@ -1,0 +1,1 @@
+(()=>{"use strict";class e extends HTMLElement{constructor(){super()}render(){}connectedCallback(){this.render()}}customElements.define("face-detection",e)})();
