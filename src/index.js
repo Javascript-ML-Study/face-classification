@@ -1,3 +1,3 @@
-import { FaceDetection } from './components/faceDetection.js';
+import { FaceDetectionElement } from './components/faceDetection.js';
 
-customElements.define('face-detection', FaceDetection);
+customElements.define('face-detection', FaceDetectionElement);
