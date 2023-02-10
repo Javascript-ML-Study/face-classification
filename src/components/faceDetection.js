@@ -22,6 +22,9 @@ class FaceDetectionElement extends HTMLElement {
         this.canvasCtx = undefined
         this.drawingUtils = window;
 
+        this.isCapture = false
+        this.faceData = {}
+
 
         this.test = 0
     }
@@ -45,7 +48,8 @@ class FaceDetectionElement extends HTMLElement {
         return `<video class="input d-none"></video>
         <canvas class="output" width="${this.inputImageSize.w}px" height="${this.inputImageSize.h}px"></canvas>
         <p></p>
-        <canvas class="output_face" width="${this.faceImageSize.w}px" height="${this.faceImageSize.h}px"></canvas>`
+        <button id="capture">Capture</button>
+        <canvas class="output_face d-none" width="${this.faceImageSize.w}px" height="${this.faceImageSize.h}px"></canvas>`
     }
 
 
@@ -56,6 +60,8 @@ class FaceDetectionElement extends HTMLElement {
         this.canvasCtx.drawImage(
             results.image, 0, 0, this.canvasElement.width, this.canvasElement.height);
         if (results.detections.length > 0) {
+            console.log(results.detections.length)
+            let now = Date.now()
             let detections = results.detections[0].boundingBox
             let location = {
                 x: (detections.xCenter - (detections.width / 2)) * this.inputImageSize.w,
@@ -71,7 +77,18 @@ class FaceDetectionElement extends HTMLElement {
             let face = tf.browser.fromPixels(imageData)
             let resizeFace = face.resizeBilinear([32,32]).cast('int32')
 
-            tf.browser.toPixels(resizeFace, this.faceElement);
+            if (this.isCapture == true) {
+                this.faceData[now] = {
+                    tensor: resizeFace
+                }
+
+                this.showCaptureFace({ timestamp: now })
+
+                this.isCapture = false
+            }
+
+
+            //tf.browser.toPixels(resizeFace, this.faceElement);
 
 
 
@@ -85,6 +102,7 @@ class FaceDetectionElement extends HTMLElement {
         }
         this.canvasCtx.restore();
     }
+
 
     detection() {
         const faceDetection = new FaceDetection({locateFile: (file) => {
@@ -131,9 +149,27 @@ class FaceDetectionElement extends HTMLElement {
         return image;
     }
 
+    showCaptureFace({ timestamp }) {
+        let id = `face_${timestamp}`
+        this.addFaceCanvas({ canvasId: id })
+
+        let faceElement = this.querySelector(`#${id}`)
+        console.log(faceElement)
+        tf.browser.toPixels(this.faceData[timestamp].tensor, faceElement);
+    }
+
+    addFaceCanvas({ canvasId }) {
+        this.insertAdjacentHTML("beforeend", `<canvas id="${canvasId}" width="${this.faceImageSize.w}px" height="${this.faceImageSize.h}px"></canvas>`)
+    }
+
+    handleClickCapture() {
+        this.isCapture = true
+    }
+
 
     connectedCallback() {
         this.render()
+        this.querySelector("#capture").addEventListener("click", this.handleClickCapture.bind(this))
 
     }
 }
