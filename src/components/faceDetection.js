@@ -23,6 +23,9 @@ class FaceDetectionElement extends HTMLElement {
         this.drawingUtils = window;
 
         this.isCapture = false
+        this.targetCaptureLabel = "default"
+        this.captureLabelList = ["default"]
+        
         this.faceData = {}
 
 
@@ -41,6 +44,7 @@ class FaceDetectionElement extends HTMLElement {
         this.faceCtx = this.faceElement.getContext('2d')
 
 
+        this.addFaceCaptureLabelSelect({ faceLabel: "default" })
         this.detection()
     }
 
@@ -48,6 +52,13 @@ class FaceDetectionElement extends HTMLElement {
         return `<video class="input d-none"></video>
         <canvas class="output" width="${this.inputImageSize.w}px" height="${this.inputImageSize.h}px"></canvas>
         <p></p>
+
+        <input type="text" id="inputCaptureLabel" />
+        <button id="addCaptureLabel">Add Capture Label</button>
+
+        <select name="captureLabel" id="captureLabel">
+        </select>
+
         <button id="capture">Capture</button>
         <canvas class="output_face d-none" width="${this.faceImageSize.w}px" height="${this.faceImageSize.h}px"></canvas>`
     }
@@ -79,7 +90,8 @@ class FaceDetectionElement extends HTMLElement {
 
             if (this.isCapture == true) {
                 this.faceData[now] = {
-                    tensor: resizeFace
+                    tensor: resizeFace,
+                    label: this.targetCaptureLabel
                 }
 
                 this.showCaptureFace({ timestamp: now })
@@ -162,15 +174,36 @@ class FaceDetectionElement extends HTMLElement {
         this.insertAdjacentHTML("beforeend", `<canvas id="${canvasId}" width="${this.faceImageSize.w}px" height="${this.faceImageSize.h}px"></canvas>`)
     }
 
+    addFaceCaptureLabelSelect({ faceLabel }) {
+        let captureLabelSelect = this.querySelector("#captureLabel")
+        captureLabelSelect.insertAdjacentHTML("beforeend", `<option value="${faceLabel}">${faceLabel}</option>`)
+
+    }
+
     handleClickCapture() {
         this.isCapture = true
+    }
+
+    handleClickAddCaptureLabel() {
+        let label = this.querySelector("#inputCaptureLabel").value
+        this.captureLabelList.push(label)
+        this.addFaceCaptureLabelSelect({ faceLabel: label })
+    }
+
+    handleSelect() {
+        let target = this.querySelector("#captureLabel")
+        let value = target.value;
+        this.targetCaptureLabel = value
     }
 
 
     connectedCallback() {
         this.render()
         this.querySelector("#capture").addEventListener("click", this.handleClickCapture.bind(this))
+        this.querySelector("#captureLabel").addEventListener("change", this.handleSelect.bind(this))
+        this.querySelector("#addCaptureLabel").addEventListener("click", this.handleClickAddCaptureLabel.bind(this))
 
+        
     }
 }
 
